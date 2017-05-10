@@ -39,6 +39,10 @@ try:
 except ImportError:                                         # pragma: only jython
     # Jython has no multiprocessing module.
     patch_multiprocessing = None
+try:
+    from coverage.billiard import patch_billiard
+except ImportError:
+    patch_billiard = None
 
 os = isolate_module(os)
 
@@ -245,6 +249,11 @@ class Coverage(object):
                     "multiprocessing is not supported on this Python"
                 )
             patch_multiprocessing(rcfile=self.config_file)
+            if not patch_billiard:
+                raise CoverageException(                    # pragma: only jython
+                    "billiard is not available"
+                )
+            patch_billiard(rcfile=self.config_file)
             # Multi-processing uses parallel for the subprocesses, so also use
             # it for the main process.
             self.config.parallel = True
